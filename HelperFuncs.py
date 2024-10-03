@@ -698,8 +698,9 @@ def expectedDMG(baseDMG: float, cr: float, cd: float) -> float:
 def checkValidList(list1: list, list2: list) -> bool:
     if (AtkType.ALL in list2) or (AtkType.ALL in list1) or (Role.ALL in list1) or (Role.ALL in list2):
         return True
-    set2 = set(list2)
-    return any(l1 in set2 for l1 in list1)
+    # set2 = set(list2)
+    # return not set(list2).isdisjoint(list1)
+    return any(l1 in list2 for l1 in list1)
 
 def getBaseValue(char, buffList: list[Buff], turn: Turn) -> float: 
     if turn.scaling == Scaling.ATK or turn.scaling == Scaling.DEF or turn.scaling == Scaling.HP: # normal scaling attacks
@@ -724,6 +725,8 @@ def getScalingValues(char: Character, buffList: list[Buff], atkType: list[AtkTyp
 
 def processTurnList(turnList: list[Turn], playerTeam, summons, eTeam, teamBuffs, enemyDebuffs, advList, delayList, spTracker, dmgTracker: DmgTracker, manualMode=False):
     
+    isDebug = logger.isEnabledFor(logging.DEBUG)
+
     while turnList:
         turn = turnList[0]
         
@@ -731,12 +734,13 @@ def processTurnList(turnList: list[Turn], playerTeam, summons, eTeam, teamBuffs,
         spTracker.redSP(turn.spChange if turn.spChange < 0 else 0)
         
         logging.warning(f"    TURN   - {turn}")
-        logging.debug("\n        ----------Char Buffs----------")
-        [logging.debug(f"        {buff}") for buff in teamBuffs if (buff.target == turn.charRole and checkValidList(turn.atkType, buff.atkType))]
-        logging.debug("        ----------End of Buff List----------")
-        logging.debug("\n        ----------Enemy Debuffs----------")
-        [logging.debug(f"        {debuff}") for debuff in enemyDebuffs if debuff.target == turn.targetID]
-        logging.debug("        ----------End of Debuff List----------")
+        if isDebug:
+            logging.debug("\n        ----------Char Buffs----------")
+            [logging.debug(f"        {buff}") for buff in teamBuffs if (buff.target == turn.charRole and checkValidList(turn.atkType, buff.atkType))]
+            logging.debug("        ----------End of Buff List----------")
+            logging.debug("\n        ----------Enemy Debuffs----------")
+            [logging.debug(f"        {debuff}") for debuff in enemyDebuffs if debuff.target == turn.targetID]
+            logging.debug("        ----------End of Debuff List----------")
 
         res, newDebuffs, newDelays = handleTurn(turn, playerTeam, eTeam, teamBuffs, enemyDebuffs, manualMode=manualMode)
         dmgTracker.addActionDMG(res.turnDmg)
@@ -867,8 +871,8 @@ def getCharStat(query: Pwr, char: Character, enemy: Enemy, buffList: list[Buff],
     res = 0
     pwrList = [query, penDct[char.element]] if query == Pwr.PEN else [query]
     
-    res += sum([buff.getBuffVal() for buff in buffList if ((buff.target == char.role) and checkValidList(turn.atkType, buff.atkType) and buff.buffType in pwrList and (not buff.reqBroken or enemy.broken))])
-    res += sum([debuff.getDebuffVal() for debuff in debuffList if ((debuff.target == enemy.enemyID) and checkValidList(turn.atkType, debuff.atkType) and debuff.debuffType in pwrList) and checkValidList([char.role], debuff.validFor)])
+    res += sum([buff.getBuffVal() for buff in buffList if ((buff.target == char.role) and buff.buffType in pwrList and checkValidList(turn.atkType, buff.atkType) and (not buff.reqBroken or enemy.broken))])
+    res += sum([debuff.getDebuffVal() for debuff in debuffList if (debuff.target == enemy.enemyID) and debuff.debuffType in pwrList and checkValidList(turn.atkType, debuff.atkType) and checkValidList([char.role], debuff.validFor)])
     
     match query:    
         case Pwr.BE_PERCENT:

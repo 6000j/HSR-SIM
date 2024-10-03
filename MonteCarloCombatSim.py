@@ -6,7 +6,7 @@ from HelperFuncs import *
 from Misc import *
 from Enemy import *
 
-cycles = 5 # comment out this line if running the simulator from an external script
+# cycles = 5 # comment out this line if running the simulator from an external script
 log = False
 manual = False
 
@@ -91,19 +91,19 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
 
         eTeam.append(Enemy(i, eLevel, eType, eSPD, eToughness, eAction, eWeaknesses, adjList))
 
-    manualPrint(manualMode, "===============================================================================================================================================================")
-    logging.critical("Enemy Team:")
-    manualPrint(manualMode, "Enemy Team:")
-    for enemy in eTeam:
-        logging.critical(enemy)
-        manualPrint(manualMode, enemy)
+    # manualPrint(manualMode, "===============================================================================================================================================================")
+    # logging.critical("Enemy Team:")
+    # manualPrint(manualMode, "Enemy Team:")
+    # for enemy in eTeam:
+    #     logging.critical(enemy)
+    #     manualPrint(manualMode, enemy)
         
-    # Print Char Info
-    logging.critical("\nPlayer Team:")
-    manualPrint(manualMode, "\nPlayer Team:")
-    for char in playerTeam:
-        logging.critical(f"{char}\n")
-        manualPrint(manualMode, f"{char}\n")
+    # # Print Char Info
+    # logging.critical("\nPlayer Team:")
+    # manualPrint(manualMode, "\nPlayer Team:")
+    # for char in playerTeam:
+    #     logging.critical(f"{char}\n")
+    #     manualPrint(manualMode, f"{char}\n")
 
     # Setup equipment and char traces
     teamBuffs, enemyDebuffs, advList, delayList = [], [], [], []
@@ -115,18 +115,18 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
     for char in playerTeam:
         initCharAV(char, teamBuffs) # apply any pre-existing speed buffs
 
-    logging.warning("\nInitial AV Adjustments")
+    # logging.warning("\nInitial AV Adjustments")
     avAdjustment(playerTeam, advList) # apply any "on battle start" advances
     advList = [] # clear advList after applying
 
-    logging.warning("\nInitial Enemy Delays")
+    # logging.warning("\nInitial Enemy Delays")
     delayList = delayAdjustment(eTeam, delayList, enemyDebuffs) # apply any "on battle start" delays
 
     allUnits = sortUnits(playerTeam + eTeam + summons)
     setPriority(allUnits)
 
     # Simulator Loop
-    logging.critical("\n==========COMBAT SIMULATION STARTED==========")
+    # logging.critical("\n==========COMBAT SIMULATION STARTED==========")
     
     
     while simAV < avLimit:
@@ -137,12 +137,12 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
         turnList = []
         if simAV > avLimit: # don't parse turn once over avLimit
             break
-        logging.critical("\n<<< NEW TURN >>>")
+        # logging.critical("\n<<< NEW TURN >>>")
         # Reduce AV of all chars
         for u in allUnits:
             u.standardAVred(av)
-            logging.info(f"-   {u.name} AV: {u.currAV:.3f} ENERGY: {u.currEnergy if u.isChar() and not u.isSummon() else 0:.3f}")
-        logging.info("")
+        #     logging.info(f"-   {u.name} AV: {u.currAV:.3f} ENERGY: {u.currEnergy if u.isChar() and not u.isSummon() else 0:.3f}")
+        # logging.info("")
 
         # Apply any special effects
         teamBuffs, enemyDebuffs, advList, delayList = handleSpecialEffects(unit, playerTeam, summons, eTeam, teamBuffs, enemyDebuffs, advList, delayList, "START", spTracker, dmg, manualMode=manualMode)
@@ -155,42 +155,42 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
         if not unit.isChar(): # Enemy turn
             numAttacks = unit.takeTurn()
             totalEnemyAttacks += numAttacks
-            action = f"ACTION > [ENEMY] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name} | {numAttacks} attacks"
-            logging.critical(action)
-            manualPrint(manualMode, action)
+            # action = f"ACTION > [ENEMY] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name} | {numAttacks} attacks"
+            # logging.critical(action)
+            # manualPrint(manualMode, action)
             for i in range(numAttacks):
                 for char in playerTeam:
                     bl, dbl, al, dl, tl = char.useHit(unit.enemyID)
                     teamBuffs, enemyDebuffs, advList, delayList = handleAdditions(playerTeam, eTeam, teamBuffs, enemyDebuffs, advList, delayList, bl, dbl, al, dl)
                     turnList.extend(tl)
             energyList = addEnergy(playerTeam, eTeam, numAttacks, enemyModule.attackRatios, teamBuffs) # might be useful someday lol
-            energyMsg = "    CharEnergy -"
-            for i in range(4):
-                energyMsg += f" {playerTeam[i].name}: Hit {energyList[i] * 10:.3f} Total: {playerTeam[i].currEnergy:.3f} |"
-            logging.warning(energyMsg)
+            # energyMsg = "    CharEnergy -"
+            # for i in range(4):
+            #     energyMsg += f" {playerTeam[i].name}: Hit {energyList[i] * 10:.3f} Total: {playerTeam[i].currEnergy:.3f} |"
+            # logging.warning(energyMsg)
             dmg.addDebuffDMG(takeDebuffDMG(unit, playerTeam, teamBuffs, enemyDebuffs))
         elif unit.isChar() and not unit.isSummon(): # Character Turn
             if manualMode:
                 moveType, target = manualModule(spTracker, playerTeam, summons, eTeam, simAV, unit, "TURN")
             else:
                 moveType, target = unit.takeTurn(), unit.defaultTarget
-            action = f"ACTION > [CHAR] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name} | {moveType}-move"
-            logging.critical(action)
-            manualPrint(manualMode, action)
+            # action = f"ACTION > [CHAR] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name} | {moveType}-move"
+            # logging.critical(action)
+            # manualPrint(manualMode, action)
             teamBuffs = tickBuffs(unit, teamBuffs, "START")
             if moveType == "E":
                 bl, dbl, al, dl, tl = unit.useSkl(target)
             elif moveType == "A":
                 bl, dbl, al, dl, tl = unit.useBsc(target)
             else:
-                manualPrint(manualMode, "Invalid move type!")
+                # manualPrint(manualMode, "Invalid move type!")
                 bl, dbl, al, dl, tl = [], [], [], [], []
             teamBuffs, enemyDebuffs, advList, delayList = handleAdditions(playerTeam, eTeam, teamBuffs, enemyDebuffs, advList, delayList, bl, dbl, al, dl)
             turnList.extend(tl)
         elif unit.isChar() and unit.isSummon():
-            action = f"ACTION > [SUMMON] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name}"
-            logging.critical(action) # Summon logic
-            manualPrint(manualMode, action)
+            # action = f"ACTION > [SUMMON] TotalAV: {simAV:.3f} | TurnAV: {av:.3f} | {unit.name}"
+            # logging.critical(action) # Summon logic
+            # manualPrint(manualMode, action)
             bl, dbl, al, dl, tl = unit.takeTurn()
             teamBuffs, enemyDebuffs, advList, delayList = handleAdditions(playerTeam, eTeam, teamBuffs, enemyDebuffs, advList, delayList, bl, dbl, al, dl)
             turnList.extend(tl)
@@ -222,9 +222,9 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
         # Reset the AV of the current unit by checking its current speed
         if not unit.isChar() or not unit.isSummon():
             resetUnitAV(unit, teamBuffs, enemyDebuffs)
-            avLog = f"AV     > {unit.name} AV reset to {unit.currAV:.3f} | {unit.currSPD:.3f} SPD"
-            logging.warning(avLog)
-            manualPrint(manualMode, avLog)
+            # avLog = f"AV     > {unit.name} AV reset to {unit.currAV:.3f} | {unit.currSPD:.3f} SPD"
+            # logging.warning(avLog)
+            # manualPrint(manualMode, avLog)
         
         allUnits = sortUnits(allUnits)
         # Reset priorities
@@ -239,20 +239,20 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
         
         if unit.isChar() and unit.isSummon():
             resetUnitAV(unit, [], []) # summons cannot be advanced during their own turn
-            avLog = f"AV     > {unit.name} AV reset to {unit.currAV:.3f} | {unit.currSPD:.3f} SPD"
-            logging.warning(avLog)
-            manualPrint(manualMode, avLog)
+            # avLog = f"AV     > {unit.name} AV reset to {unit.currAV:.3f} | {unit.currSPD:.3f} SPD"
+            # logging.warning(avLog)
+            # manualPrint(manualMode, avLog)
             
         allUnits = sortUnits(allUnits)
         
-    logging.critical("\n==========COMBAT SIMULATION ENDED==========")
+    # logging.critical("\n==========COMBAT SIMULATION ENDED==========")
 
     # Extra calculations
     for char in playerTeam:
         if char.name == "Yunli":
             char.hitMultiplier = char.ults / totalEnemyAttacks
 
-    logging.critical("\n==========SIMULATION RESULTS==========")
+    # logging.critical("\n==========SIMULATION RESULTS==========")
     
     # Print damage info
     debuffDMG, charDMG = 0, 0
@@ -266,24 +266,24 @@ def startSimulator(cycleLimit = 5, s1: Character = None, s2: Character = None, s
     dpavList = [i / avLimit for i in dmgList]
     percentList = [i / dmg.getTotalDMG() * 100 for i in dmgList]
 
-    logging.critical(f"TOTAL TEAM DMG: {dmg.getTotalDMG():.3f} | AV: {avLimit}")
-    logging.critical(f"TEAM DPAV: {dmg.getTotalDMG() / avLimit:.3f}")
-    logging.critical(f"DEBUFF DMG: {dmg.getDebuffDMG():.3f} | CHAR DMG: {dmg.getActionDMG():.3f} | WB DMG: {dmg.getWeaknessBreakDMG():.3f}")
-    logging.critical(f"SP GAINED: {spTracker.getSPGain()} | SP USED: {spTracker.getSPUsed()} | Enemy Attacks: {totalEnemyAttacks}")
-    res = ""
-    i = 0
-    for char in playerTeam:
-        res += f"\n{char.name} DPAV: {dpavList[i]:.3f}, {percentList[i]:.3f}%"
-        i += 1
+    # logging.critical(f"TOTAL TEAM DMG: {dmg.getTotalDMG():.3f} | AV: {avLimit}")
+    # logging.critical(f"TEAM DPAV: {dmg.getTotalDMG() / avLimit:.3f}")
+    # logging.critical(f"DEBUFF DMG: {dmg.getDebuffDMG():.3f} | CHAR DMG: {dmg.getActionDMG():.3f} | WB DMG: {dmg.getWeaknessBreakDMG():.3f}")
+    # logging.critical(f"SP GAINED: {spTracker.getSPGain()} | SP USED: {spTracker.getSPUsed()} | Enemy Attacks: {totalEnemyAttacks}")
+    # res = ""
+    # i = 0
+    # for char in playerTeam:
+    #     res += f"\n{char.name} DPAV: {dpavList[i]:.3f}, {percentList[i]:.3f}%"
+    #     i += 1
         
-    logging.critical(f"{res}\n")
+    # logging.critical(f"{res}\n")
 
     for char in playerTeam:
         res, charDMG = char.getTotalDMG()
-        logging.critical(f"{char.name} > Total DMG: {charDMG:.3f} | Basics: {char.basics} | Skills: {char.skills} | Ults: {char.ults} | FuAs: {char.fuas} | Leftover AV: {char.currAV:.3f} | Excess Energy: {char.currEnergy:.3f}")
-        logging.critical(res)
+        # logging.critical(f"{char.name} > Total DMG: {charDMG:.3f} | Basics: {char.basics} | Skills: {char.skills} | Ults: {char.ults} | FuAs: {char.fuas} | Leftover AV: {char.currAV:.3f} | Excess Energy: {char.currEnergy:.3f}")
+        # logging.critical(res)
     
-    return f"DPAV: {dmg.getTotalDMG() / avLimit:.3f} | SP Used: {spTracker.getSPUsed()}, SP Gain: {spTracker.getSPGain()}"
+    # return f"DPAV: {dmg.getTotalDMG() / avLimit:.3f} | SP Used: {spTracker.getSPUsed()}, SP Gain: {spTracker.getSPGain()}"
 
 if __name__ == "__main__":
     # Start the simulator with logging output to a file
